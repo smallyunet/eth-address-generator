@@ -34,4 +34,5 @@ Please make sure to update tests as appropriate.
 
 ## Acknowledgements
 
-- OpenAI for providing the GPT-4 model, which was used to help generate and style the HTML and CSS code for this project.
+- OpenAI for providing the GPT-4 model, which was used to help generate not only the HTML and CSS code but also the JavaScript code for this project.
+
