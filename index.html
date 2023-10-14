@@ -18,15 +18,15 @@
         background: linear-gradient(135deg, #ffffff, #6dd5fa, #2980b9);
         padding: 50px 0;
         overflow-x: hidden;
-        background-attachment: fixed; 
+        background-attachment: fixed;
         background-size: cover;
       }
 
       .container {
         max-width: 650px;
         margin: 0 auto;
-        background-color: #ffffff; /* 背景颜色修改为白色 */
-        padding: 30px; /* 调整内边距 */
+        background-color: #ffffff;
+        padding: 30px;
         box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
         border-radius: 15px;
         border-top: 5px solid #5a67d8;
@@ -40,8 +40,8 @@
 
       .operation {
         border-bottom: 2px solid rgba(226, 232, 240, 0.5);
-        padding-bottom: 20px; /* 调整内边距 */
-        margin-bottom: 20px; /* 调整外边距 */
+        padding-bottom: 20px;
+        margin-bottom: 20px;
         position: relative;
       }
 
@@ -52,7 +52,7 @@
 
       h3 {
         color: #2c3e50;
-        margin-bottom: 20px; /* 调整外边距 */
+        margin-bottom: 20px;
         font-size: 24px;
         position: relative;
       }
@@ -123,12 +123,15 @@
 
       #message {
         color: #e53e3e;
-        margin-bottom: 15px; /* 调整外边距 */
+        margin-bottom: 15px;
+        margin-top: 15px;
         padding: 10px;
         background-color: #fed7d7;
         border-radius: 8px;
         border-left: 5px solid #e53e3e;
         display: none;
+        transition: opacity 0.3s, transform 0.3s;
+        transform: translateY(20px);
       }
 
       .result-container {
@@ -142,10 +145,13 @@
         transform: translateY(20px);
         transition: opacity 0.3s, transform 0.3s;
         margin-bottom: 20px;
+        display: none;
       }
 
       #result {
-        visibility: hidden;
+        display: none;
+        opacity: 0;
+        transform: translateY(20px);
       }
 
       .result-list {
@@ -192,13 +198,9 @@
         </button>
         <div id="message"></div>
 
-        <div
-          class="result-container"
-          id="result"
-          style="display: block; opacity: 0; transform: translateY(20px)"
-        >
+        <div class="result-container" id="result">
           <ul class="result-list">
-            <li class="result-item>
+            <li class="result-item">
               <strong class="result-label">Address:</strong>
               <span class="result-value" id="addressDisplay"></span>
             </li>
@@ -211,6 +213,10 @@
         <a id="etherscanLink" href="#" target="_blank" style="display: none">
           View on Etherscan
         </a>
+        <br />
+        <a id="blockscoutLink" href="#" target="_blank" style="display: none"
+          >View on Blockscout</a
+        >
       </div>
       <div class="operation">
         <h3>Generate Random Private Key & Address</h3>
@@ -287,8 +293,24 @@
       }
       function displayError(message) {
         const messageElem = document.getElementById("message");
+        const resultElem = document.getElementById("result");
+        const etherscanLink = document.getElementById("etherscanLink");
+
         messageElem.innerHTML = message;
         messageElem.style.display = "block";
+        setTimeout(() => {
+          messageElem.style.opacity = "1";
+          messageElem.style.transform = "translateY(0)";
+        }, 10);
+
+        // Hide results when displaying an error
+        resultElem.style.opacity = "0";
+        resultElem.style.transform = "translateY(20px)";
+        setTimeout(() => {
+          resultElem.style.display = "none";
+        }, 300);
+
+        etherscanLink.style.display = "none";
       }
 
       function displayResult(privateKey, address) {
@@ -296,13 +318,28 @@
         document.getElementById("addressDisplay").textContent = address;
 
         const resultElem = document.getElementById("result");
-        resultElem.style.visibility = "visible";
-        resultElem.style.opacity = "1";
-        resultElem.style.transform = "translateY(0)";
-
         const etherscanLink = document.getElementById("etherscanLink");
+        const blockscoutLink = document.getElementById("blockscoutLink"); // 新增这一行
+        const messageElem = document.getElementById("message");
+
+        // Hide error message if it was displayed
+        messageElem.style.opacity = "0";
+        messageElem.style.transform = "translateY(20px)";
+        setTimeout(() => {
+          messageElem.style.display = "none"; // 在动画完成后再隐藏
+        }, 300);
+
+        resultElem.style.display = "block";
+        setTimeout(() => {
+          resultElem.style.opacity = "1";
+          resultElem.style.transform = "translateY(0)";
+        }, 10);
+
         etherscanLink.href = `https://etherscan.io/address/${address}`;
         etherscanLink.style.display = "block";
+
+        blockscoutLink.href = `https://eth.blockscout.com/address/${address}`; // 设置Blockscout的链接地址
+        blockscoutLink.style.display = "block";
       }
     </script>
   </body>
