@@ -1,134 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Generate Ethereum Address</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha3/0.8.0/sha3.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.3.0/dist/web3.min.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+    />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #9ad4d9, #62d2a2);
-        }
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        input {
-            width: 100%;
-            padding: 5px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-        button {
-            cursor: pointer;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: #fff;
-            padding: 8px 16px;
-            font-size: 14px;
-            border: none;
-            border-radius: 10px;
-            margin-right: 10px;
-            transition: background 0.3s ease;
-        }
-        button:hover {
-            background: linear-gradient(135deg, #2980b9, #3498db);
-        }
-        #message {
-            color: red;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        #result {
-            margin-bottom: 20px;
-        }
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #9ad4d9, #62d2a2);
+      }
+
+      .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      input {
+        width: 100%;
+        padding: 5px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        margin-bottom: 15px;
+      }
+
+      button {
+        cursor: pointer;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: #fff;
+        padding: 8px 16px;
+        font-size: 14px;
+        border: none;
+        border-radius: 10px;
+        margin-right: 10px;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background: linear-gradient(135deg, #2980b9, #3498db);
+      }
+
+      #message {
+        color: red;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      #result {
+        margin-bottom: 20px;
+      }
+
+      a {
+        color: #3498db;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
     </style>
-</head>
-<body>
+  </head>
+
+  <body>
     <div class="container">
-        <h1>Generate Ethereum Address</h1>
-        <label for="privateKey">Enter Private Key:</label>
-        <input type="text" id="privateKey" name="privateKey">
-        <button onclick="genPair()">Generate Ethereum Address</button>
-        <button onclick="generateRandomPrivateKeyAndAddress()">Generate Random Private Key and Address</button>
-        <div id="message"></div>
-        <div id="result"></div>
-        <a id="etherscanLink" href="#" target="_blank" style="display:none;">View on Etherscan</a>
+      <h1>Generate Ethereum Address</h1>
+      <label for="privateKey">Enter Private Key:</label>
+      <input type="text" id="privateKey" name="privateKey" />
+      <button onclick="deriveAddressFromPrivateKey()">
+        Generate Ethereum Address
+      </button>
+      <button onclick="generateRandomPrivateKeyAndAddress()">
+        Generate Random Private Key and Address
+      </button>
+      <div id="message"></div>
+      <div id="result"></div>
+      <a id="etherscanLink" href="#" target="_blank" style="display: none"
+        >View on Etherscan</a
+      >
     </div>
     <script>
-        function genPair() {
-            let privateKeyInput = document.getElementById("privateKey").value;
-            if (privateKeyInput === "") {
-                displayMessage("Error: Please enter a private key.");
-                return;
-            }
+      const web3 = new Web3();
 
-            if (!privateKeyInput.startsWith("0x")) {
-                privateKeyInput = "0x" + privateKeyInput;
-            }
+      function deriveAddressFromPrivateKey() {
+        const privateKeyInputElem = document.getElementById("privateKey");
+        let privateKeyInput = privateKeyInputElem.value.trim();
 
-            if (privateKeyInput.length === 65) {
-                privateKeyInput = privateKeyInput.slice(0, 2) + "0" + privateKeyInput.slice(2);
-            }
-
-            if (privateKeyInput.length !== 66) {
-                displayMessage("Error: The private key must be 64 characters long (66 with the 0x prefix).");
-                return;
-            }
-
-            const key = BigInt(privateKeyInput);
-            const ec = new elliptic.ec("secp256k1");
-            const publicKey = ec.keyFromPrivate(key.toString(16)).getPublic();
-
-            const publicKeyBytes = new Uint8Array(publicKey.encode("array", false).slice(1));
-            const keccak256 = sha3_256.create();
-            keccak256.update(publicKeyBytes);
-            const ethAddress = "0x" + keccak256.hex().slice(24);
-
-            document.getElementById("result").innerHTML = `Private Key: ${key.toString(16)}<br>Ethereum Address: ${ethAddress}`;
-            const etherscanLink = document.getElementById("etherscanLink");
-            etherscanLink.href = `https://etherscan.io/address/${ethAddress}`;
-            etherscanLink.style.display = "block";
+        if (privateKeyInput === "") {
+          displayError("Please enter a private key.");
+          return;
         }
 
-        function generateRandomPrivateKeyAndAddress() {
-            const randomPrivateKey = "0x" + Array.from(window.crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('');
-            document.getElementById("privateKey").value = randomPrivateKey;
-            genPair();
+        if (!privateKeyInput.startsWith("0x")) {
+          privateKeyInput = "0x" + privateKeyInput;
         }
 
-        function displayMessage(message) {
-            document.getElementById("message").innerHTML = message;
+        if (privateKeyInput.length !== 66) {
+          displayError(
+            "The private key must be 64 characters long (66 with the 0x prefix)."
+          );
+          return;
         }
+
+        const ethAddress = deriveEthereumAddress(privateKeyInput);
+        displayResult(privateKeyInput, ethAddress);
+      }
+
+      function generateRandomPrivateKeyAndAddress() {
+        const randomPrivateKey =
+          "0x" +
+          Array.from(window.crypto.getRandomValues(new Uint8Array(32)))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+        document.getElementById("privateKey").value = randomPrivateKey;
+        deriveAddressFromPrivateKey();
+      }
+
+      function deriveEthereumAddress(privateKey) {
+        const ec = new elliptic.ec("secp256k1");
+        const publicKey = ec.keyFromPrivate(privateKey.slice(2)).getPublic(); // Remove 0x prefix
+
+        // Convert x and y coordinates to bytes
+        const xBytes = publicKey.getX().toArray("be", 32);
+        const yBytes = publicKey.getY().toArray("be", 32);
+
+        // Concatenate the byte arrays
+        const concatBytes = new Uint8Array([...xBytes, ...yBytes]);
+
+        // Convert bytes to hex string
+        const concatHex = Array.from(concatBytes)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
+        // Hash the concatenated hex string using web3's soliditySha3
+        const hashed = web3.utils.soliditySha3({
+          type: "bytes",
+          value: concatHex,
+        });
+
+        // Take the last 20 bytes of the hash to create the Ethereum address
+        return "0x" + hashed.slice(-40);
+      }
+
+      function displayError(message) {
+        document.getElementById("message").innerHTML = message;
+      }
+
+      function displayResult(privateKey, address) {
+        document.getElementById(
+          "result"
+        ).innerHTML = `Private Key: ${privateKey}<br>Ethereum Address: ${address}`;
+        const etherscanLink = document.getElementById("etherscanLink");
+        etherscanLink.href = `https://etherscan.io/address/${address}`;
+        etherscanLink.style.display = "block";
+      }
     </script>
-</body>
+  </body>
 </html>
