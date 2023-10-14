@@ -15,15 +15,17 @@
     <style>
       body {
         font-family: "Arial", sans-serif;
-        background: linear-gradient(45deg, #e8f1f5, #b5d8e1);
+        background: linear-gradient(135deg, #ffffff, #6dd5fa, #2980b9);
         padding: 50px 0;
         overflow-x: hidden;
+        background-attachment: fixed; 
+        background-size: cover;
       }
 
       .container {
         max-width: 650px;
         margin: 0 auto;
-        background-color: rgba(255, 255, 255, 0.95);
+        background-color: #ffffff; /* 背景颜色修改为白色 */
         padding: 30px; /* 调整内边距 */
         box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
         border-radius: 15px;
@@ -139,6 +141,7 @@
         opacity: 0;
         transform: translateY(20px);
         transition: opacity 0.3s, transform 0.3s;
+        margin-bottom: 20px;
       }
 
       #result {
@@ -152,7 +155,6 @@
       }
 
       .result-item {
-        margin-bottom: 10px;
       }
 
       .result-label {
@@ -196,7 +198,7 @@
           style="display: block; opacity: 0; transform: translateY(20px)"
         >
           <ul class="result-list">
-            <li>
+            <li class="result-item>
               <strong class="result-label">Address:</strong>
               <span class="result-value" id="addressDisplay"></span>
             </li>
