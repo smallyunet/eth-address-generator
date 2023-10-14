@@ -7,104 +7,220 @@
     <title>Generate Ethereum Address</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.3.0/dist/web3.min.js"></script>
-
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
     />
+
     <style>
       body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #9ad4d9, #62d2a2);
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(45deg, #e8f1f5, #b5d8e1);
+        padding: 50px 0;
+        overflow-x: hidden;
       }
 
       .container {
-        background-color: #fff;
-        padding: 20px;
+        max-width: 650px;
+        margin: 0 auto;
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 30px; /* 调整内边距 */
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
         border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-top: 5px solid #5a67d8;
+        overflow: hidden;
+        transition: box-shadow 0.3s;
       }
 
-      h1 {
+      .container:hover {
+        box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15);
+      }
+
+      .operation {
+        border-bottom: 2px solid rgba(226, 232, 240, 0.5);
+        padding-bottom: 20px; /* 调整内边距 */
+        margin-bottom: 20px; /* 调整外边距 */
+        position: relative;
+      }
+
+      .operation:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      h3 {
+        color: #2c3e50;
+        margin-bottom: 20px; /* 调整外边距 */
         font-size: 24px;
-        margin-bottom: 20px;
+        position: relative;
+      }
+
+      h3:after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        width: 70px;
+        background: linear-gradient(135deg, #5a67d8, #8e44ad);
       }
 
       label {
-        display: block;
-        font-size: 14px;
         font-weight: bold;
-        margin-bottom: 5px;
+        display: block;
+        margin-bottom: 10px; /* 调整外边距 */
+        color: #4a5568;
       }
 
-      input {
+      input[type="text"] {
         width: 100%;
-        padding: 5px;
-        font-size: 14px;
-        border: 1px solid #ccc;
+        padding: 12px;
+        margin-bottom: 15px; /* 调整外边距 */
+        border: 2px solid #cbd5e0;
         border-radius: 10px;
-        margin-bottom: 15px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+
+      input[type="text"]:focus {
+        border-color: #8e44ad;
+        box-shadow: 0 0 8px rgba(142, 68, 173, 0.3);
+        outline: none;
       }
 
       button {
-        cursor: pointer;
-        background: linear-gradient(135deg, #3498db, #2980b9);
+        background: linear-gradient(135deg, #5a67d8, #8e44ad);
         color: #fff;
-        padding: 8px 16px;
-        font-size: 14px;
+        padding: 12px 24px;
         border: none;
-        border-radius: 10px;
-        margin-right: 10px;
-        transition: background 0.3s ease;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        position: relative;
+        overflow: hidden;
       }
 
       button:hover {
-        background: linear-gradient(135deg, #2980b9, #3498db);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      button:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -50%;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.15);
+        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+      }
+
+      button:hover:before {
+        left: 150%;
       }
 
       #message {
-        color: red;
-        font-weight: bold;
-        margin-bottom: 10px;
+        color: #e53e3e;
+        margin-bottom: 15px; /* 调整外边距 */
+        padding: 10px;
+        background-color: #fed7d7;
+        border-radius: 8px;
+        border-left: 5px solid #e53e3e;
+        display: none;
+      }
+
+      .result-container {
+        padding: 20px 25px;
+        border: 1px solid #ddd;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
+        margin-top: 20px;
+        background-color: rgba(245, 245, 245, 0.9);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.3s, transform 0.3s;
       }
 
       #result {
-        margin-bottom: 20px;
+        visibility: hidden;
+      }
+
+      .result-list {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .result-item {
+        margin-bottom: 10px;
+      }
+
+      .result-label {
+        font-weight: bold;
+        font-size: 15px;
+        color: #333;
+      }
+
+      .result-value {
+        font-size: 14px;
+        color: #555;
+        word-wrap: break-word;
       }
 
       a {
-        color: #3498db;
+        color: #5a67d8;
         text-decoration: none;
       }
 
       a:hover {
         text-decoration: underline;
+        color: #8e44ad;
       }
     </style>
   </head>
 
   <body>
     <div class="container">
-      <h1>Generate Ethereum Address</h1>
-      <label for="privateKey">Enter Private Key:</label>
-      <input type="text" id="privateKey" name="privateKey" />
-      <button onclick="deriveAddressFromPrivateKey()">
-        Generate Ethereum Address
-      </button>
-      <button onclick="generateRandomPrivateKeyAndAddress()">
-        Generate Random Private Key and Address
-      </button>
-      <div id="message"></div>
-      <div id="result"></div>
-      <a id="etherscanLink" href="#" target="_blank" style="display: none"
-        >View on Etherscan</a
-      >
+      <div class="operation">
+        <h3>Derive Address from Private Key</h3>
+        <label for="privateKey">Enter Private Key:</label>
+        <input type="text" id="privateKey" name="privateKey" />
+        <button id="deriveAddressBtn" onclick="deriveAddressFromPrivateKey()">
+          Generate Ethereum Address
+        </button>
+        <div id="message"></div>
+
+        <div
+          class="result-container"
+          id="result"
+          style="display: block; opacity: 0; transform: translateY(20px)"
+        >
+          <ul class="result-list">
+            <li>
+              <strong class="result-label">Address:</strong>
+              <span class="result-value" id="addressDisplay"></span>
+            </li>
+            <li class="result-item">
+              <strong class="result-label">Private Key:</strong>
+              <span class="result-value" id="privateKeyDisplay"></span>
+            </li>
+          </ul>
+        </div>
+        <a id="etherscanLink" href="#" target="_blank" style="display: none">
+          View on Etherscan
+        </a>
+      </div>
+      <div class="operation">
+        <h3>Generate Random Private Key & Address</h3>
+        <button
+          id="generateRandomBtn"
+          onclick="generateRandomPrivateKeyAndAddress()"
+        >
+          Generate Random Pair
+        </button>
+      </div>
     </div>
+
     <script>
       const web3 = new Web3();
 
@@ -167,15 +283,21 @@
         // Take the last 20 bytes of the hash to create the Ethereum address
         return "0x" + hashed.slice(-40);
       }
-
       function displayError(message) {
-        document.getElementById("message").innerHTML = message;
+        const messageElem = document.getElementById("message");
+        messageElem.innerHTML = message;
+        messageElem.style.display = "block";
       }
 
       function displayResult(privateKey, address) {
-        document.getElementById(
-          "result"
-        ).innerHTML = `Private Key: ${privateKey}<br>Ethereum Address: ${address}`;
+        document.getElementById("privateKeyDisplay").textContent = privateKey;
+        document.getElementById("addressDisplay").textContent = address;
+
+        const resultElem = document.getElementById("result");
+        resultElem.style.visibility = "visible";
+        resultElem.style.opacity = "1";
+        resultElem.style.transform = "translateY(0)";
+
         const etherscanLink = document.getElementById("etherscanLink");
         etherscanLink.href = `https://etherscan.io/address/${address}`;
         etherscanLink.style.display = "block";
