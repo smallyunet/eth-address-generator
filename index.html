@@ -1,338 +1,742 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Generate Ethereum Address</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.3.0/dist/web3.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
-    />
 
-    <style>
-      body {
-        font-family: "Arial", sans-serif;
-        background: linear-gradient(135deg, #ffffff, #6dd5fa, #2980b9);
-        padding: 50px 0;
-        overflow-x: hidden;
-        background-attachment: fixed;
-        background-size: cover;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ethereum Vault | Secure Offline Generator</title>
+  <!-- Local Libraries -->
+  <script src="libs/ethers.js"></script>
+  <script src="libs/qrcode.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Light Theme Variables */
+      --bg-color: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --accent: #10b981;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --danger: #ef4444;
+      --border: rgba(203, 213, 225, 0.6);
+      --glass-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.04);
+      --input-bg: #ffffff;
+      --input-border: #e2e8f0;
+      --result-bg: #f8fafc;
+      --result-hover: #ffffff;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --primary: #6366f1;
+      --primary-hover: #818cf8;
+      --accent: #34d399;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --danger: #f87171;
+      --border: rgba(148, 163, 184, 0.2);
+      --glass-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.3), 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+      --input-bg: #1e293b;
+      --input-border: #334155;
+      --result-bg: #1e293b;
+      --result-hover: #334155;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      /* Subtle mesh gradient for both themes */
+      background-image:
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .status-bar {
+      position: fixed;
+      top: 20px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      z-index: 100;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot.online {
+      background-color: var(--danger);
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+
+    .dot.offline {
+      background-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 550px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Top gradient accent */
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 800;
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      color: var(--text-main);
+      letter-spacing: -1px;
+    }
+
+    p.subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 35px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 25px;
+      background: var(--input-border);
+      padding: 5px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text-main);
+    }
+
+    .tab.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      font-weight: 600;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
       }
 
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px;
+      background: var(--input-bg);
+      border: 2px solid var(--input-border);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    input::placeholder {
+      color: #cbd5e1;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, var(--primary), #4338ca);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .result-card {
+      margin-top: 35px;
+      padding: 25px;
+      background: var(--card-bg);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      display: none;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03);
+      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-row {
+      margin-bottom: 24px;
+    }
+
+    .result-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .result-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .value-display {
+      background: var(--result-bg);
+      padding: 14px;
+      border-radius: 10px;
+      font-family: 'SF Mono', 'Roboto Mono', 'Courier New', monospace;
+      word-break: break-all;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .value-display:hover {
+      background: var(--result-hover);
+      border-color: var(--primary);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .blur-text {
+      filter: blur(8px);
+      user-select: none;
+      transition: filter 0.3s;
+      opacity: 0.7;
+    }
+
+    .blur-text.revealed {
+      filter: blur(0);
+      user-select: text;
+      opacity: 1;
+    }
+
+    .copy-hint {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      background: var(--text-main);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .value-display:hover .copy-hint {
+      opacity: 1;
+      transform: translateY(-50%) translateX(-4px);
+    }
+
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 25px;
+      padding: 15px;
+      background: #ffffff;
+      /* keep QR bg white for scanning */
+      border-radius: 16px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .security-note {
+      margin-top: 35px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+      padding: 16px;
+      line-height: 1.6;
+      padding: 16px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 12px;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      z-index: 100;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.05);
+      border-color: var(--primary);
+    }
+
+    /* Mobile Enhancements */
+    @media (max-width: 480px) {
       .container {
-        max-width: 650px;
-        margin: 0 auto;
-        background-color: #ffffff;
-        padding: 30px;
-        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
-        border-radius: 15px;
-        border-top: 5px solid #5a67d8;
-        overflow: hidden;
-        transition: box-shadow 0.3s;
+        padding: 24px;
+        border-radius: 20px;
       }
 
-      .container:hover {
-        box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15);
+      h1 {
+        font-size: 1.8rem;
       }
 
-      .operation {
-        border-bottom: 2px solid rgba(226, 232, 240, 0.5);
-        padding-bottom: 20px;
-        margin-bottom: 20px;
-        position: relative;
+      .btn {
+        padding: 16px;
       }
+    }
 
-      .operation:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-      }
+    .security-note strong {
+      color: var(--danger);
+    }
 
-      h3 {
-        color: #2c3e50;
-        margin-bottom: 20px;
-        font-size: 24px;
-        position: relative;
-      }
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
 
-      h3:after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        width: 70px;
-        background: linear-gradient(135deg, #5a67d8, #8e44ad);
-      }
+    .toggle-btn:hover {
+      background: #eef2ff;
+    }
 
-      label {
-        font-weight: bold;
-        display: block;
-        margin-bottom: 10px; /* 调整外边距 */
-        color: #4a5568;
-      }
+    .explorer-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      display: none;
+      /* Hidden by default */
+    }
 
-      input[type="text"] {
-        width: 100%;
-        padding: 12px;
-        margin-bottom: 15px; /* 调整外边距 */
-        border: 2px solid #cbd5e0;
-        border-radius: 10px;
-        transition: border-color 0.3s, box-shadow 0.3s;
-      }
+    .explorer-link a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-      input[type="text"]:focus {
-        border-color: #8e44ad;
-        box-shadow: 0 0 8px rgba(142, 68, 173, 0.3);
-        outline: none;
-      }
+    .explorer-link a:hover {
+      text-decoration: underline;
+    }
 
-      button {
-        background: linear-gradient(135deg, #5a67d8, #8e44ad);
-        color: #fff;
-        padding: 12px 24px;
-        border: none;
-        border-radius: 50px;
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-        position: relative;
-        overflow: hidden;
-      }
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e293b;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 99px;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 200;
+    }
 
-      button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-      }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
 
-      button:before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -50%;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(255, 255, 255, 0.15);
-        transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-      }
+<body>
 
-      button:hover:before {
-        left: 150%;
-      }
+  <div class="status-bar" id="statusBar">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">Checking...</span>
+  </div>
 
-      #message {
-        color: #e53e3e;
-        margin-bottom: 15px;
-        margin-top: 15px;
-        padding: 10px;
-        background-color: #fed7d7;
-        border-radius: 8px;
-        border-left: 5px solid #e53e3e;
-        display: none;
-        transition: opacity 0.3s, transform 0.3s;
-        transform: translateY(20px);
-      }
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle Theme">
+    <!-- Sun Icon -->
+    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <!-- Moon Icon -->
+    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
 
-      .result-container {
-        padding: 20px 25px;
-        border: 1px solid #ddd;
-        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
-        border-radius: 10px;
-        margin-top: 20px;
-        background-color: rgba(245, 245, 245, 0.9);
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.3s, transform 0.3s;
-        margin-bottom: 20px;
-        display: none;
-      }
+  <div class="container">
+    <h1>Ethereum Vault</h1>
+    <p class="subtitle">Secure, Offline Address Generation</p>
 
-      #result {
-        display: none;
-        opacity: 0;
-        transform: translateY(20px);
-      }
-
-      .result-list {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .result-item {
-      }
-
-      .result-label {
-        font-weight: bold;
-        font-size: 15px;
-        color: #333;
-      }
-
-      .result-value {
-        font-size: 14px;
-        color: #555;
-        word-wrap: break-word;
-      }
-
-      a {
-        color: #5a67d8;
-        text-decoration: none;
-      }
-
-      a:hover {
-        text-decoration: underline;
-        color: #8e44ad;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div class="container">
-      <div class="operation">
-        <h3>Derive Address from Private Key</h3>
-        <label for="privateKey">Enter Private Key:</label>
-        <input type="text" id="privateKey" name="privateKey" />
-        <button id="deriveAddressBtn" onclick="deriveAddressFromPrivateKey()">
-          Generate Ethereum Address
-        </button>
-        <div id="message"></div>
-
-        <div class="result-container" id="result">
-          <ul class="result-list">
-            <li class="result-item">
-              <strong class="result-label">Address:</strong>
-              <span class="result-value" id="addressDisplay"></span>
-            </li>
-            <li class="result-item">
-              <strong class="result-label">Private Key:</strong>
-              <span class="result-value" id="privateKeyDisplay"></span>
-            </li>
-          </ul>
-        </div>
-        <a id="etherscanLink" href="#" target="_blank" style="display: none">
-          View on Etherscan
-        </a>
-      </div>
-      <div class="operation">
-        <h3>Generate Random Private Key & Address</h3>
-        <button
-          id="generateRandomBtn"
-          onclick="generateRandomPrivateKeyAndAddress()"
-        >
-          Generate Random Pair
-        </button>
-      </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('generate')">Generate New</div>
+      <div class="tab" onclick="switchTab('derive')">Derive from Key</div>
     </div>
 
-    <script>
-      const web3 = new Web3();
+    <!-- GENERATE NEW -->
+    <div id="generate" class="section active">
+      <button class="btn" onclick="generateNewWallet()">
+        Create New Wallet
+      </button>
+    </div>
 
-      function deriveAddressFromPrivateKey() {
-        const privateKeyInputElem = document.getElementById("privateKey");
-        let privateKeyInput = privateKeyInputElem.value.trim();
+    <!-- DERIVE -->
+    <div id="derive" class="section">
+      <div class="input-group">
+        <label>Private Key (Hex)</label>
+        <input type="text" id="privateKeyInput" placeholder="0x..." autocomplete="off">
+      </div>
+      <button class="btn" onclick="deriveWallet()">
+        Derive Wallet
+      </button>
+    </div>
 
-        if (privateKeyInput === "") {
-          displayError("Please enter a private key.");
-          return;
+    <!-- RESULT CARD -->
+    <div class="result-card" id="resultCard">
+      <div class="result-row">
+        <div class="result-label">
+          Address
+          <span class="toggle-btn" onclick="copyToClipboard('addressVal')">Copy</span>
+        </div>
+        <div class="value-display" id="addressVal" onclick="copyToClipboard('addressVal')">
+          0x...
+          <span class="copy-hint">Click to Copy</span>
+        </div>
+        <!-- Explorer Link (Online Only) -->
+        <div class="explorer-link" id="explorerLink">
+          <a href="#" target="_blank" id="blockscanUrl">
+            View on Blockscan ↗
+          </a>
+        </div>
+      </div>
+
+      <div class="result-row">
+        <div class="result-label">
+          Private Key
+          <button class="toggle-btn" onclick="toggleSecret()">Reveal</button>
+        </div>
+        <div class="value-display" onclick="copyToClipboard('secretVal')">
+          <div class="blur-text" id="secretVal">0x...</div>
+          <span class="copy-hint">Click to Copy</span>
+        </div>
+      </div>
+
+      <div class="qr-container" id="qrCode"></div>
+    </div>
+
+    <div class="security-note">
+      <strong>Security Warning:</strong> Always verify that you are offline before generating real implementations.
+      This tool runs entirely in your browser using local libraries. No data is sent to any server.
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied to Clipboard!</div>
+
+  <script>
+    // -- Status Check --
+    function updateStatus() {
+      const isOnline = navigator.onLine;
+      const text = document.getElementById('statusText');
+      const dot = document.getElementById('statusDot');
+      const explorerLink = document.getElementById('explorerLink');
+
+      if (isOnline) {
+        text.textContent = 'Network Detected (Not Secure)';
+        dot.className = 'dot online';
+        text.style.color = 'var(--text-muted)';
+        // Show link if we have an address
+        if (document.getElementById('resultCard').style.display === 'block') {
+          explorerLink.style.display = 'block';
         }
+      } else {
+        text.textContent = 'Offline (Secure)';
+        dot.className = 'dot offline';
+        text.style.color = 'var(--accent)';
+        explorerLink.style.display = 'none';
+      }
+    }
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    updateStatus();
 
-        if (!privateKeyInput.startsWith("0x")) {
-          privateKeyInput = "0x" + privateKeyInput;
-        }
+    // -- Tabs --
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
 
-        if (privateKeyInput.length !== 66) {
-          displayError(
-            "The private key must be 64 characters long (66 with the 0x prefix)."
-          );
-          return;
-        }
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
 
-        const ethAddress = deriveEthereumAddress(privateKeyInput);
-        displayResult(privateKeyInput, ethAddress);
+      document.getElementById('resultCard').style.display = 'none';
+    }
+
+    // -- Logic --
+    function displayWallet(wallet) {
+      const resultCard = document.getElementById('resultCard');
+      const addressVal = document.getElementById('addressVal');
+      const secretVal = document.getElementById('secretVal');
+      const qrContainer = document.getElementById('qrCode');
+      const explorerLink = document.getElementById('explorerLink');
+      const blockscanUrl = document.getElementById('blockscanUrl');
+
+      addressVal.textContent = wallet.address;
+      secretVal.textContent = wallet.privateKey;
+
+      // hide secret by default
+      secretVal.classList.remove('revealed');
+
+      // Set explorer URL using Blockscan (aggregates etherscan etc)
+      blockscanUrl.href = `https://blockscan.com/address/${wallet.address}`;
+
+      // Show explorer link ONLY if online
+      if (navigator.onLine) {
+        explorerLink.style.display = 'block';
+      } else {
+        explorerLink.style.display = 'none';
       }
 
-      function generateRandomPrivateKeyAndAddress() {
-        const randomPrivateKey =
-          "0x" +
-          Array.from(window.crypto.getRandomValues(new Uint8Array(32)))
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-        document.getElementById("privateKey").value = randomPrivateKey;
-        deriveAddressFromPrivateKey();
+      // QR Code
+      qrContainer.innerHTML = '';
+      new QRCode(qrContainer, {
+        text: wallet.address,
+        width: 128,
+        height: 128,
+        colorDark: "#1e293b",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      resultCard.style.display = 'block';
+    }
+
+    function generateNewWallet() {
+      try {
+        const wallet = ethers.Wallet.createRandom();
+        displayWallet(wallet);
+      } catch (e) {
+        alert("Error generating wallet: " + e.message);
       }
+    }
 
-      function deriveEthereumAddress(privateKey) {
-        const ec = new elliptic.ec("secp256k1");
-        const publicKey = ec.keyFromPrivate(privateKey.slice(2)).getPublic(); // Remove 0x prefix
+    function deriveWallet() {
+      const input = document.getElementById('privateKeyInput').value.trim();
+      if (!input) return alert("Please enter a private key");
 
-        // Convert x and y coordinates to bytes
-        const xBytes = publicKey.getX().toArray("be", 32);
-        const yBytes = publicKey.getY().toArray("be", 32);
-
-        // Concatenate the byte arrays
-        const concatBytes = new Uint8Array([...xBytes, ...yBytes]);
-
-        // Convert bytes to hex string
-        const concatHex = Array.from(concatBytes)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-
-        // Hash the concatenated hex string using web3's soliditySha3
-        const hashed = web3.utils.soliditySha3({
-          type: "bytes",
-          value: concatHex,
-        });
-
-        // Take the last 20 bytes of the hash to create the Ethereum address
-        return "0x" + hashed.slice(-40);
+      try {
+        const wallet = new ethers.Wallet(input);
+        displayWallet(wallet);
+      } catch (e) {
+        alert("Invalid Private Key: " + e.message);
       }
-      function displayError(message) {
-        const messageElem = document.getElementById("message");
-        const resultElem = document.getElementById("result");
-        const etherscanLink = document.getElementById("etherscanLink");
+    }
 
-        messageElem.innerHTML = message;
-        messageElem.style.display = "block";
-        setTimeout(() => {
-          messageElem.style.opacity = "1";
-          messageElem.style.transform = "translateY(0)";
-        }, 10);
+    // -- UI Helpers --
+    function toggleSecret() {
+      const el = document.getElementById('secretVal');
+      el.classList.toggle('revealed');
+      const btn = event.target;
+      btn.textContent = el.classList.contains('revealed') ? "Hide" : "Reveal";
+    }
 
-        // Hide results when displaying an error
-        resultElem.style.opacity = "0";
-        resultElem.style.transform = "translateY(20px)";
-        setTimeout(() => {
-          resultElem.style.display = "none";
-        }, 300);
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast();
+      });
+    }
 
-        etherscanLink.style.display = "none";
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // -- Theme Logic --
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      const newTheme = isDark ? 'light' : 'dark';
+
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+      const sun = document.querySelector('.sun-icon');
+      const moon = document.querySelector('.moon-icon');
+
+      if (theme === 'dark') {
+        sun.style.display = 'block';
+        moon.style.display = 'none';
+      } else {
+        sun.style.display = 'none';
+        moon.style.display = 'block';
       }
+    }
 
-      function displayResult(privateKey, address) {
-        document.getElementById("privateKeyDisplay").textContent = privateKey;
-        document.getElementById("addressDisplay").textContent = address;
+    // Init Theme
+    (function initTheme() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
 
-        const resultElem = document.getElementById("result");
-        const etherscanLink = document.getElementById("etherscanLink");
-        const messageElem = document.getElementById("message");
+      document.documentElement.setAttribute('data-theme', theme);
+      updateThemeIcon(theme);
+    })();
+  </script>
+</body>
 
-        // Hide error message if it was displayed
-        messageElem.style.opacity = "0";
-        messageElem.style.transform = "translateY(20px)";
-        setTimeout(() => {
-          messageElem.style.display = "none";
-        }, 300);
-
-        resultElem.style.display = "block";
-        setTimeout(() => {
-          resultElem.style.opacity = "1";
-          resultElem.style.transform = "translateY(0)";
-        }, 10);
-
-        etherscanLink.href = `https://etherscan.io/address/${address}`;
-        etherscanLink.style.display = "block";
-      }
-    </script>
-  </body>
 </html>

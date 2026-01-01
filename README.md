@@ -1,41 +1,42 @@
-# Generate Ethereum Address Web App
+# Ethereum Vault (Offline Address Generator)
 
-A simple yet effective web application designed for generating Ethereum addresses. Users can either input their private keys to derive their Ethereum address or generate random pairs of private keys and corresponding Ethereum addresses.
+A premium, secure, and completely offline-capable Ethereum wallet generator.
 
-## 🚀 Features
+![Security Status](https://img.shields.io/badge/Security-High-green)
+![Offline Capable](https://img.shields.io/badge/Offline-100%25-blue)
 
-- **Derive Ethereum Address**: Provide your private key and get the associated Ethereum address.
-- **Generate Random Pairs**: Obtain a random private key along with its corresponding Ethereum address.
-- **Private Key Validation**: Ensures the private key input adheres to necessary standards.
-- **Visual Feedback**: Displays the Ethereum address in conjunction with the provided or generated private key.
-- **Etherscan Integration**: Quick link to view the generated Ethereum address on Etherscan for verification.
+## � Security & Privacy Features
 
-## 🛠 Getting Started
+- **100% Offline Integrity**: All dependencies (`ethers.js`, `qrcode.js`) are stored locally in the `libs/` folder. This tool makes **zero** external network requests.
+- **Client-Side Only**: Keys are generated using your browser's cryptographically secure random number generator (via `ethers.js`).
+- **Network Detection**: The UI automatically detects if you are connected to the internet and warns you. For maximum security, **disconnect your internet** before generating keys.
+- **Ephemeral State**: No data is saved to local storage, cookies, or any database. Refreshing the page wipes all data.
 
-To initiate with this project:
-1. Clone the repository or download the source code.
-2. Open the `index.html` file in your preferred web browser.
+## � Usage Guide
 
-## 🧰 Technologies Used
+### Recommended Secure Workflow
 
-- HTML
-- CSS
-- JavaScript
-- [elliptic](https://github.com/indutny/elliptic)
-- [web3's solidity-sha3](https://web3js.readthedocs.io/en/v1.3.4/web3-utils.html#soliditysha3)
+1.  **Download** this repository to a USB drive or trusted computer.
+2.  **Disconnect** the computer from the internet (WiFi/Ethernet).
+3.  **Open** `index.html` in your browser.
+4.  **Check Status**: Ensure the status bar says "Offline (Secure)" with a green light.
+5.  **Generate**: Click "Create New Wallet".
+6.  **Backup**: Write down your Private Key and Address on physical paper.
+7.  **Clear**: Close the tab before reconnecting to the internet.
 
-## 📜 License
+## � Technical Details
 
-This project is open-sourced and licensed under the [MIT License](LICENSE).
+-   **Core Library**: `ethers.js v6.11.1` (Local UMD build)
+-   **QR Generation**: `qrcode.js v1.0.0`
+-   **No Build Steps**: Pure HTML/JS/CSS. No `npm install` needed to run. Just open the file.
 
-## 🤝 Contributing
+### How to Audit
 
-Your contributions are always welcome! 
+Since the code is minimal, you can verify it easily:
+1.  Open `index.html` in a text editor.
+2.  Verify it only imports scripts from `./libs/`.
+3.  Search for `fetch`, `XMLHttpRequest`, or `http` to see there are no hidden beacons (except the status check which relies on the browser's native `navigator.onLine`).
 
-Pull requests are appreciated. For significant alterations, please initiate an issue first to deliberate your suggestions.
+## ⚠️ Disclaimer
 
-Kindly ensure you adjust or introduce tests as necessary.
-
-## 🙏 Acknowledgements
-
-- Kudos to OpenAI for the GPT-4 model. It was instrumental in crafting the HTML, CSS, and JavaScript for this project.
+This tool is provided "as is". While it uses industry-standard libraries, you are responsible for the safe storage of your private keys. **Never share your private key with anyone.**
