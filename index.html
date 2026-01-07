@@ -12,480 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      /* Light Theme Variables */
-      --bg-color: #f8fafc;
-      --card-bg: rgba(255, 255, 255, 0.85);
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --accent: #10b981;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --danger: #ef4444;
-      --border: rgba(203, 213, 225, 0.6);
-      --glass-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.04);
-      --input-bg: #ffffff;
-      --input-border: #e2e8f0;
-      --result-bg: #f8fafc;
-      --result-hover: #ffffff;
-    }
-
-    [data-theme="dark"] {
-      --bg-color: #0f172a;
-      --card-bg: rgba(30, 41, 59, 0.7);
-      --primary: #6366f1;
-      --primary-hover: #818cf8;
-      --accent: #34d399;
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --danger: #f87171;
-      --border: rgba(148, 163, 184, 0.2);
-      --glass-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.3), 0 10px 20px -5px rgba(0, 0, 0, 0.2);
-      --input-bg: #1e293b;
-      --input-border: #334155;
-      --result-bg: #1e293b;
-      --result-hover: #334155;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      /* Subtle mesh gradient for both themes */
-      background-image:
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%);
-      color: var(--text-main);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .status-bar {
-      position: fixed;
-      top: 20px;
-      padding: 8px 16px;
-      border-radius: 99px;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--card-bg);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      z-index: 100;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .dot.online {
-      background-color: var(--danger);
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-    }
-
-    .dot.offline {
-      background-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    }
-
-    .container {
-      width: 100%;
-      max-width: 550px;
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 40px;
-      box-shadow: var(--glass-shadow);
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Top gradient accent */
-    .container::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 6px;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
-    }
-
-    h1 {
-      text-align: center;
-      font-weight: 800;
-      font-size: 2.2rem;
-      margin-bottom: 8px;
-      color: var(--text-main);
-      letter-spacing: -1px;
-    }
-
-    p.subtitle {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 1rem;
-      margin-bottom: 35px;
-    }
-
-    .tabs {
-      display: flex;
-      margin-bottom: 25px;
-      background: var(--input-border);
-      padding: 5px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-    }
-
-    .tab {
-      flex: 1;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-
-    .tab:hover {
-      color: var(--text-main);
-    }
-
-    .tab.active {
-      background: var(--card-bg);
-      color: var(--primary);
-      font-weight: 600;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-      border: 1px solid rgba(0, 0, 0, 0.02);
-    }
-
-    .section {
-      display: none;
-      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .input-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-      color: var(--text-main);
-      font-weight: 600;
-    }
-
-    input {
-      width: 100%;
-      padding: 16px;
-      background: var(--input-bg);
-      border: 2px solid var(--input-border);
-      border-radius: 12px;
-      color: var(--text-main);
-      font-size: 1rem;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    input::placeholder {
-      color: #cbd5e1;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 18px;
-      background: linear-gradient(135deg, var(--primary), #4338ca);
-      color: white;
-      border: none;
-      border-radius: 14px;
-      font-size: 1.05rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.15);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .result-card {
-      margin-top: 35px;
-      padding: 25px;
-      background: var(--card-bg);
-      border-radius: 18px;
-      border: 1px solid var(--border);
-      display: none;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03);
-      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .result-row {
-      margin-bottom: 24px;
-    }
-
-    .result-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .result-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 600;
-    }
-
-    .value-display {
-      background: var(--result-bg);
-      padding: 14px;
-      border-radius: 10px;
-      font-family: 'SF Mono', 'Roboto Mono', 'Courier New', monospace;
-      word-break: break-all;
-      font-size: 0.9rem;
-      color: var(--text-main);
-      border: 1px solid var(--input-border);
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-    }
-
-    .value-display:hover {
-      background: var(--result-hover);
-      border-color: var(--primary);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    .blur-text {
-      filter: blur(8px);
-      user-select: none;
-      transition: filter 0.3s;
-      opacity: 0.7;
-    }
-
-    .blur-text.revealed {
-      filter: blur(0);
-      user-select: text;
-      opacity: 1;
-    }
-
-    .copy-hint {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.75rem;
-      background: var(--text-main);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 6px;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      pointer-events: none;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .value-display:hover .copy-hint {
-      opacity: 1;
-      transform: translateY(-50%) translateX(-4px);
-    }
-
-    .qr-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 25px;
-      padding: 15px;
-      background: #ffffff;
-      /* keep QR bg white for scanning */
-      border-radius: 16px;
-      width: fit-content;
-      margin-left: auto;
-      margin-right: auto;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-
-    .security-note {
-      margin-top: 35px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      text-align: center;
-      line-height: 1.6;
-      padding: 16px;
-      line-height: 1.6;
-      padding: 16px;
-      background: rgba(239, 68, 68, 0.1);
-      border-radius: 12px;
-      border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .theme-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-main);
-      backdrop-filter: blur(8px);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      z-index: 100;
-      transition: all 0.2s;
-    }
-
-    .theme-toggle:hover {
-      transform: scale(1.05);
-      border-color: var(--primary);
-    }
-
-    /* Mobile Enhancements */
-    @media (max-width: 480px) {
-      .container {
-        padding: 24px;
-        border-radius: 20px;
-      }
-
-      h1 {
-        font-size: 1.8rem;
-      }
-
-      .btn {
-        padding: 16px;
-      }
-    }
-
-    .security-note strong {
-      color: var(--danger);
-    }
-
-    .toggle-btn {
-      background: none;
-      border: none;
-      color: var(--primary);
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
-      transition: background 0.2s;
-    }
-
-    .toggle-btn:hover {
-      background: #eef2ff;
-    }
-
-    .explorer-link {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.9rem;
-      display: none;
-      /* Hidden by default */
-    }
-
-    .explorer-link a {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .explorer-link a:hover {
-      text-decoration: underline;
-    }
-
-    /* Toast Notification */
-    .toast {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #1e293b;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 99px;
-      font-weight: 500;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      opacity: 0;
-      transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-      z-index: 200;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -522,7 +49,8 @@
 
     <div class="tabs">
       <div class="tab active" onclick="switchTab('generate')">Generate New</div>
-      <div class="tab" onclick="switchTab('derive')">Derive from Key</div>
+      <div class="tab" onclick="switchTab('restore-key')">Restore (Key)</div>
+      <div class="tab" onclick="switchTab('restore-phrase')">Restore (Phrase)</div>
     </div>
 
     <!-- GENERATE NEW -->
@@ -532,14 +60,25 @@
       </button>
     </div>
 
-    <!-- DERIVE -->
-    <div id="derive" class="section">
+    <!-- RESTORE KEY -->
+    <div id="restore-key" class="section">
       <div class="input-group">
         <label>Private Key (Hex)</label>
         <input type="text" id="privateKeyInput" placeholder="0x..." autocomplete="off">
       </div>
-      <button class="btn" onclick="deriveWallet()">
-        Derive Wallet
+      <button class="btn" onclick="restoreFromKey()">
+        Restore Wallet
+      </button>
+    </div>
+
+    <!-- RESTORE PHRASE -->
+    <div id="restore-phrase" class="section">
+      <div class="input-group">
+        <label>Mnemonic Phrase (12 or 24 words)</label>
+        <input type="text" id="mnemonicInput" placeholder="apple banana ..." autocomplete="off">
+      </div>
+      <button class="btn" onclick="restoreFromMnemonic()">
+        Restore Wallet
       </button>
     </div>
 
@@ -565,10 +104,21 @@
       <div class="result-row">
         <div class="result-label">
           Private Key
-          <button class="toggle-btn" onclick="toggleSecret()">Reveal</button>
+          <button class="toggle-btn" onclick="toggleSecret('secretVal', event.target)">Reveal</button>
         </div>
         <div class="value-display" onclick="copyToClipboard('secretVal')">
           <div class="blur-text" id="secretVal">0x...</div>
+          <span class="copy-hint">Click to Copy</span>
+        </div>
+      </div>
+
+      <div class="result-row" id="mnemonicRow">
+        <div class="result-label">
+          Recovery Phrase
+          <button class="toggle-btn" onclick="toggleSecret('mnemonicVal', event.target)">Reveal</button>
+        </div>
+        <div class="value-display" onclick="copyToClipboard('mnemonicVal')">
+          <div class="blur-text" id="mnemonicVal">...</div>
           <span class="copy-hint">Click to Copy</span>
         </div>
       </div>
@@ -584,159 +134,7 @@
 
   <div class="toast" id="toast">Copied to Clipboard!</div>
 
-  <script>
-    // -- Status Check --
-    function updateStatus() {
-      const isOnline = navigator.onLine;
-      const text = document.getElementById('statusText');
-      const dot = document.getElementById('statusDot');
-      const explorerLink = document.getElementById('explorerLink');
-
-      if (isOnline) {
-        text.textContent = 'Network Detected (Not Secure)';
-        dot.className = 'dot online';
-        text.style.color = 'var(--text-muted)';
-        // Show link if we have an address
-        if (document.getElementById('resultCard').style.display === 'block') {
-          explorerLink.style.display = 'block';
-        }
-      } else {
-        text.textContent = 'Offline (Secure)';
-        dot.className = 'dot offline';
-        text.style.color = 'var(--accent)';
-        explorerLink.style.display = 'none';
-      }
-    }
-    window.addEventListener('online', updateStatus);
-    window.addEventListener('offline', updateStatus);
-    updateStatus();
-
-    // -- Tabs --
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-
-      document.getElementById('resultCard').style.display = 'none';
-    }
-
-    // -- Logic --
-    function displayWallet(wallet) {
-      const resultCard = document.getElementById('resultCard');
-      const addressVal = document.getElementById('addressVal');
-      const secretVal = document.getElementById('secretVal');
-      const qrContainer = document.getElementById('qrCode');
-      const explorerLink = document.getElementById('explorerLink');
-      const blockscanUrl = document.getElementById('blockscanUrl');
-
-      addressVal.textContent = wallet.address;
-      secretVal.textContent = wallet.privateKey;
-
-      // hide secret by default
-      secretVal.classList.remove('revealed');
-
-      // Set explorer URL using Blockscan (aggregates etherscan etc)
-      blockscanUrl.href = `https://blockscan.com/address/${wallet.address}`;
-
-      // Show explorer link ONLY if online
-      if (navigator.onLine) {
-        explorerLink.style.display = 'block';
-      } else {
-        explorerLink.style.display = 'none';
-      }
-
-      // QR Code
-      qrContainer.innerHTML = '';
-      new QRCode(qrContainer, {
-        text: wallet.address,
-        width: 128,
-        height: 128,
-        colorDark: "#1e293b",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-      });
-
-      resultCard.style.display = 'block';
-    }
-
-    function generateNewWallet() {
-      try {
-        const wallet = ethers.Wallet.createRandom();
-        displayWallet(wallet);
-      } catch (e) {
-        alert("Error generating wallet: " + e.message);
-      }
-    }
-
-    function deriveWallet() {
-      const input = document.getElementById('privateKeyInput').value.trim();
-      if (!input) return alert("Please enter a private key");
-
-      try {
-        const wallet = new ethers.Wallet(input);
-        displayWallet(wallet);
-      } catch (e) {
-        alert("Invalid Private Key: " + e.message);
-      }
-    }
-
-    // -- UI Helpers --
-    function toggleSecret() {
-      const el = document.getElementById('secretVal');
-      el.classList.toggle('revealed');
-      const btn = event.target;
-      btn.textContent = el.classList.contains('revealed') ? "Hide" : "Reveal";
-    }
-
-    function copyToClipboard(elementId) {
-      const text = document.getElementById(elementId).textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        showToast();
-      });
-    }
-
-    function showToast() {
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
-    }
-
-    // -- Theme Logic --
-    function toggleTheme() {
-      const html = document.documentElement;
-      const isDark = html.getAttribute('data-theme') === 'dark';
-      const newTheme = isDark ? 'light' : 'dark';
-
-      html.setAttribute('data-theme', newTheme);
-      localStorage.setItem('theme', newTheme);
-      updateThemeIcon(newTheme);
-    }
-
-    function updateThemeIcon(theme) {
-      const sun = document.querySelector('.sun-icon');
-      const moon = document.querySelector('.moon-icon');
-
-      if (theme === 'dark') {
-        sun.style.display = 'block';
-        moon.style.display = 'none';
-      } else {
-        sun.style.display = 'none';
-        moon.style.display = 'block';
-      }
-    }
-
-    // Init Theme
-    (function initTheme() {
-      const saved = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
-
-      document.documentElement.setAttribute('data-theme', theme);
-      updateThemeIcon(theme);
-    })();
-  </script>
+  <script src="script.js"></script>
 </body>
 
 </html>
