@@ -469,3 +469,135 @@
       transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
+
+    /* Bulk List Styles */
+    .bulk-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .bulk-item {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      padding: 15px;
+      border-radius: 12px;
+      display: flex;
+      gap: 15px;
+      font-size: 0.85rem;
+    }
+
+    .bulk-idx {
+      font-weight: bold;
+      color: var(--primary);
+      min-width: 30px;
+    }
+
+    .bulk-data {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: 'SF Mono', monospace;
+      word-break: break-all;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+        color: black;
+        display: block;
+        padding: 0;
+      }
+
+      .status-bar,
+      .theme-toggle,
+      .tabs,
+      .btn,
+      .print-actions,
+      .toast,
+      .security-note,
+      h1,
+      p.subtitle,
+      .input-group,
+      .explorer-link {
+        display: none !important;
+      }
+
+      .container {
+        box-shadow: none;
+        border: 2px solid #000;
+        max-width: 100%;
+        margin: 0;
+        padding: 20px;
+        backdrop-filter: none;
+      }
+
+      .container::before {
+        display: none;
+      }
+
+      .result-card {
+        display: block !important;
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        animation: none;
+      }
+
+      .result-row {
+        margin-bottom: 20px;
+        border-bottom: 1px dashed #ccc;
+        padding-bottom: 15px;
+      }
+
+      .result-label {
+        color: #000;
+        font-weight: bold;
+        font-size: 1rem;
+      }
+
+      .value-display {
+        background: none;
+        border: none;
+        padding: 5px 0;
+        color: #000;
+        font-size: 1rem;
+        font-weight: bold;
+      }
+
+      .copy-hint,
+      .toggle-btn {
+        display: none !important;
+        /* Hide "Copy" buttons */
+      }
+
+      .blur-text {
+        filter: none !important;
+        /* Always reveal secrets when printing */
+        opacity: 1 !important;
+      }
+
+      .qr-container {
+        border: none;
+        box-shadow: none;
+        margin-top: 40px;
+      }
+
+      /* Add a print header */
+      .result-card::before {
+        content: "Ethereum Paper Wallet (OFFLINE GENERATED)";
+        display: block;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 30px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+      }
+    }
