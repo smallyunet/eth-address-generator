@@ -37,6 +37,56 @@ function switchTab(tabId) {
 }
 
 // -- Logic --
+// -- Worker Setup --
+const worker = new Worker('worker.js');
+let isGenerating = false;
+
+worker.onmessage = function (e) {
+    const { type, payload } = e.data;
+
+    if (type === 'ERROR') {
+        setLoading(false);
+        alert("Error: " + payload);
+        return;
+    }
+
+    if (type === 'WALLET_GENERATED' || type === 'WALLET_RESTORED') {
+        setLoading(false);
+        displayWallet(payload);
+    } else if (type === 'BULK_RESULT') {
+        setLoading(false);
+        displayBulkWallets(payload);
+    } else if (type === 'PROGRESS') {
+        updateProgress(payload.current, payload.total);
+    }
+};
+
+function setLoading(active, text = "Processing...") {
+    isGenerating = active;
+    const btn = document.querySelector('.btn'); // simplistic targeting, might need refinement per section
+    // In a real app we'd target specific buttons, but here we can just add a global overlay or text change
+
+    // For now, let's just change cursor and maybe show a toast or overlay
+    document.body.style.cursor = active ? 'wait' : 'default';
+
+    const toast = document.getElementById('toast');
+    if (active) {
+        toast.textContent = text;
+        toast.classList.add('show', 'loading-toast');
+    } else {
+        toast.textContent = 'Copied to Clipboard!'; // Reset to default
+        toast.classList.remove('show', 'loading-toast');
+    }
+}
+
+function updateProgress(current, total) {
+    const toast = document.getElementById('toast');
+    if (toast.classList.contains('loading-toast')) {
+        toast.textContent = `Generated ${current}/${total}...`;
+    }
+}
+
+// -- Logic --
 function displayWallet(wallet) {
     const resultCard = document.getElementById('resultCard');
     const addressVal = document.getElementById('addressVal');
@@ -65,8 +115,8 @@ function displayWallet(wallet) {
     const mnemonicRow = document.getElementById('mnemonicRow');
     const mnemonicVal = document.getElementById('mnemonicVal');
 
-    if (wallet.mnemonic && wallet.mnemonic.phrase) {
-        mnemonicVal.textContent = wallet.mnemonic.phrase;
+    if (wallet.mnemonic) {
+        mnemonicVal.textContent = wallet.mnemonic;
         mnemonicRow.style.display = 'block';
         // Hide by default
         mnemonicVal.classList.remove('revealed');
@@ -89,40 +139,33 @@ function displayWallet(wallet) {
     });
 
     resultCard.style.display = 'block';
+
+    // Scroll to result
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function generateNewWallet() {
-    try {
-        const wallet = ethers.Wallet.createRandom();
-        displayWallet(wallet);
-    } catch (e) {
-        alert("Error generating wallet: " + e.message);
-    }
+    if (isGenerating) return;
+    setLoading(true, "Generating Wallet...");
+    worker.postMessage({ type: 'GENERATE' });
 }
 
 function restoreFromKey() {
+    if (isGenerating) return;
     const input = document.getElementById('privateKeyInput').value.trim();
     if (!input) return alert("Please enter a private key");
 
-    try {
-        const wallet = new ethers.Wallet(input);
-        displayWallet(wallet);
-    } catch (e) {
-        alert("Invalid Private Key: " + e.message);
-    }
+    setLoading(true, "Restoring...");
+    worker.postMessage({ type: 'RESTORE_KEY', payload: input });
 }
 
 function restoreFromMnemonic() {
+    if (isGenerating) return;
     const input = document.getElementById('mnemonicInput').value.trim();
     if (!input) return alert("Please enter a mnemonic phrase");
 
-    try {
-        // Validation handled by ethers
-        const wallet = ethers.Wallet.fromPhrase(input);
-        displayWallet(wallet);
-    } catch (e) {
-        alert("Invalid Mnemonic: " + e.message);
-    }
+    setLoading(true, "Restoring...");
+    worker.postMessage({ type: 'RESTORE_PHRASE', payload: input });
 }
 
 // -- UI Helpers --
@@ -141,6 +184,10 @@ function copyToClipboard(elementId) {
 
 function showToast() {
     const toast = document.getElementById('toast');
+    // Don't override if loading
+    if (toast.classList.contains('loading-toast')) return;
+
+    toast.textContent = "Copied to clipboard!";
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2000);
 }
@@ -149,6 +196,7 @@ function showToast() {
 let bulkWallets = [];
 
 function generateBulkWallets() {
+    if (isGenerating) return;
     const countInput = document.getElementById('bulkCount');
     let count = parseInt(countInput.value);
 
@@ -156,41 +204,36 @@ function generateBulkWallets() {
     if (count > 50) {
         count = 50;
         countInput.value = 50;
-        alert("Max limit is 50 wallets at once to prevent browser lag.");
+        alert("Max limit is 50 wallets to prevent browser lag.");
     }
 
     bulkWallets = [];
     const list = document.getElementById('bulkList');
-    list.innerHTML = '<div class="loading">Generating...</div>';
+    list.innerHTML = ''; // Clear previous
     document.getElementById('bulkResult').style.display = 'block';
 
-    // Small timeout to allow UI to render "Generating..."
-    setTimeout(() => {
-        try {
-            let html = '';
-            for (let i = 0; i < count; i++) {
-                const w = ethers.Wallet.createRandom();
-                bulkWallets.push({
-                    address: w.address,
-                    privateKey: w.privateKey,
-                    mnemonic: w.mnemonic.phrase
-                });
+    setLoading(true, "Generating Batch...");
+    worker.postMessage({ type: 'BULK_GENERATE', payload: count });
+}
 
-                html += `
-                <div class="bulk-item">
-                    <div class="bulk-idx">#${i + 1}</div>
-                    <div class="bulk-data">
-                        <div><strong>Addr:</strong> ${w.address}</div>
-                        <div><strong>Key:</strong> <span class="blur-text revealed" style="filter: blur(4px);" onclick="this.style.filter='none'">${w.privateKey}</span></div>
-                        <div><strong>Phrase:</strong> <span class="blur-text revealed" style="filter: blur(4px);" onclick="this.style.filter='none'">${w.mnemonic.phrase}</span></div>
-                    </div>
-                </div>`;
-            }
-            list.innerHTML = html;
-        } catch (e) {
-            alert("Error: " + e.message);
-        }
-    }, 50);
+function displayBulkWallets(wallets) {
+    bulkWallets = wallets;
+    const list = document.getElementById('bulkList');
+    let html = '';
+
+    wallets.forEach((w, i) => {
+        html += `
+        <div class="bulk-item">
+            <div class="bulk-idx">#${i + 1}</div>
+            <div class="bulk-data">
+                <div><strong>Addr:</strong> ${w.address}</div>
+                <div><strong>Key:</strong> <span class="blur-text revealed" style="filter: blur(4px);" onclick="this.style.filter='none'">${w.privateKey}</span></div>
+                <div><strong>Phrase:</strong> <span class="blur-text revealed" style="filter: blur(4px);" onclick="this.style.filter='none'">${w.mnemonic || 'N/A'}</span></div>
+            </div>
+        </div>`;
+    });
+
+    list.innerHTML = html;
 }
 
 function downloadCSV() {
@@ -199,7 +242,7 @@ function downloadCSV() {
     let csvContent = "data:text/csv;charset=utf-8,Address,PrivateKey,Mnemonic\n";
 
     bulkWallets.forEach(w => {
-        csvContent += `${w.address},${w.privateKey},${w.mnemonic}\n`;
+        csvContent += `${w.address},${w.privateKey},${w.mnemonic || ''}\n`;
     });
 
     const encodedUri = encodeURI(csvContent);

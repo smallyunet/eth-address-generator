@@ -44,8 +44,10 @@
   </button>
 
   <div class="container">
-    <h1>Ethereum Vault</h1>
-    <p class="subtitle">Secure, Offline Address Generation</p>
+    <div class="header-section">
+      <h1>Ethereum Vault</h1>
+      <p class="subtitle">Secure, Offline Address Generation</p>
+    </div>
 
     <div class="tabs">
       <div class="tab active" onclick="switchTab('generate')">Generate New</div>
@@ -106,9 +108,9 @@
     <!-- RESULT CARD -->
     <div class="result-card" id="resultCard">
       <div class="result-row">
-        <div class="result-label">
-          Address
-          <span class="toggle-btn" onclick="copyToClipboard('addressVal')">Copy</span>
+        <div class="result-header">
+          <span class="result-label">Address</span>
+          <button class="toggle-btn" onclick="copyToClipboard('addressVal')">Copy</button>
         </div>
         <div class="value-display" id="addressVal" onclick="copyToClipboard('addressVal')">
           0x...
@@ -123,8 +125,8 @@
       </div>
 
       <div class="result-row">
-        <div class="result-label">
-          Private Key
+        <div class="result-header">
+          <span class="result-label">Private Key</span>
           <button class="toggle-btn" onclick="toggleSecret('secretVal', event.target)">Reveal</button>
         </div>
         <div class="value-display" onclick="copyToClipboard('secretVal')">
@@ -134,8 +136,8 @@
       </div>
 
       <div class="result-row" id="mnemonicRow">
-        <div class="result-label">
-          Recovery Phrase
+        <div class="result-header">
+          <span class="result-label">Recovery Phrase</span>
           <button class="toggle-btn" onclick="toggleSecret('mnemonicVal', event.target)">Reveal</button>
         </div>
         <div class="value-display" onclick="copyToClipboard('mnemonicVal')">
@@ -145,7 +147,7 @@
       </div>
 
       <div class="qr-container" id="qrCode"></div>
-      <div class="qr-container" id="qrCode"></div>
+
 
       <div class="print-actions" style="text-align: center; margin-top: 20px;">
         <button class="toggle-btn" onclick="window.print()">🖨️ Print Paper Wallet</button>
